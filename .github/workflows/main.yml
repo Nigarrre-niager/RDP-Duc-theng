@@ -4,8 +4,8 @@ on: workflow_dispatch
 
 jobs:
   build:
-    runs-on: windows-latest # Windows 11
-    timeout-minutes: 360 # Tối đa 6 tiếng
+    runs-on: windows-latest
+    timeout-minutes: 360
 
     steps:
       # 1. Kết nối vào mạng Tailscale
@@ -16,7 +16,7 @@ jobs:
           version: latest
           hostname: avt-duc-theng
 
-      # 2. Cấu hình Tài khoản và RDP (Fix Full)
+      # 2. Cấu hình Tài khoản và RDP
       - name: Configure User and RDP (RDP Only)
         env:
           USER_PASSWORD: ${{ secrets.RDP_PASSWORD }} 
@@ -50,16 +50,14 @@ jobs:
       # 3. Dọn dẹp hệ thống Windows
       - name: System Optimization (Cleanup)
         run: |
-          Write-Host "Bắt đầu dọn dẹp file rác hệ thống..."
           Remove-Item -Path C:\Windows\Temp\* -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path $env:TEMP\* -Recurse -Force -ErrorAction SilentlyContinue
-          Write-Host "Dọn dẹp hoàn tất!"
 
       # 4. Hiển thị thông báo hướng dẫn
       - name: Hướng dẫn kết nối
         run: |
           Write-Host "==================================================="
-          Write-Host "WINDOWS VPS ĐÃ SẴN SÀNG! (FIX FULL - RDP ONLY)"
+          Write-Host "WINDOWS VPS ĐÃ SẴN SÀNG! (Mã code đã FIX lỗi kích hoạt)"
           Write-Host "Hostname: avt-duc-theng"
           Write-Host "User: DucThengGaming"
           Write-Host "Pass: (Mật khẩu Secret)"
@@ -68,7 +66,6 @@ jobs:
       # 5. Treo máy (Keep Alive)
       - name: Keep Alive
         run: |
-          Write-Host "Đang chạy... Đừng đóng tab này."
           while ($true) {
             Start-Sleep -Seconds 60
           }
