@@ -1,0 +1,74 @@
+name: AVT DucTheng
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: windows-latest # Windows 11
+    timeout-minutes: 360 # Tối đa 6 tiếng
+
+    steps:
+      # 1. Kết nối vào mạng Tailscale
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          version: latest
+          hostname: avt-duc-theng
+
+      # 2. Cấu hình Tài khoản và RDP (Fix Full)
+      - name: Configure User and RDP (RDP Only)
+        env:
+          USER_PASSWORD: ${{ secrets.RDP_PASSWORD }} 
+        run: |
+          $ErrorActionPreference = "Stop"
+          $NewUser = "DucThengGaming"
+          $NewPass = $env:USER_PASSWORD
+          $SecurePass = ConvertTo-SecureString $NewPass -AsPlainText -Force
+
+          Write-Host "--- A. Cấu hình Tài khoản ---"
+          if (-not (Get-LocalUser -Name $NewUser -ErrorAction SilentlyContinue)) {
+            New-LocalUser -Name $NewUser -Password $SecurePass -FullName "Gaming VPS User" -Description "Custom GitHub RDP User" -ErrorAction Stop
+            Add-LocalGroupMember -Group "Administrators" -Member $NewUser -ErrorAction Stop
+          } else {
+            Set-LocalUser -Name $NewUser -Password $SecurePass -ErrorAction Stop
+          }
+
+          Write-Host "--- B. Tạo RDP Banner ---"
+          $IntroTitle = "💎 VPS PREMIUM SIÊU XỊN: AVT DUC THENG! (RDP Only) 💎"
+          $IntroText = "WELCOME, BOSS! Phiên bản RDP-Only ổn định. Giới hạn 6 tiếng. Vui lòng lưu trữ dữ liệu an toàn!"
+          
+          Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -name "legalnoticecaption" -Value $IntroTitle -ErrorAction Stop
+          Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -name "legalnoticetext" -Value $IntroText -ErrorAction Stop
+          
+          Write-Host "--- C. Kích hoạt RDP ---"
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0 -ErrorAction Stop
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop" -ErrorAction Stop
+          
+          Write-Host "Cấu hình RDP thành công."
+
+      # 3. Dọn dẹp hệ thống Windows
+      - name: System Optimization (Cleanup)
+        run: |
+          Write-Host "Bắt đầu dọn dẹp file rác hệ thống..."
+          Remove-Item -Path C:\Windows\Temp\* -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path $env:TEMP\* -Recurse -Force -ErrorAction SilentlyContinue
+          Write-Host "Dọn dẹp hoàn tất!"
+
+      # 4. Hiển thị thông báo hướng dẫn
+      - name: Hướng dẫn kết nối
+        run: |
+          Write-Host "==================================================="
+          Write-Host "WINDOWS VPS ĐÃ SẴN SÀNG! (FIX FULL - RDP ONLY)"
+          Write-Host "Hostname: avt-duc-theng"
+          Write-Host "User: DucThengGaming"
+          Write-Host "Pass: (Mật khẩu Secret)"
+          Write-Host "==================================================="
+
+      # 5. Treo máy (Keep Alive)
+      - name: Keep Alive
+        run: |
+          Write-Host "Đang chạy... Đừng đóng tab này."
+          while ($true) {
+            Start-Sleep -Seconds 60
+          }
